@@ -1,107 +1,163 @@
 # Webhook Repo – GitHub Webhook Receiver
 
-This repository receives GitHub webhook events from `action-repo`,
-stores minimal required data into MongoDB,
-and displays updates in a clean UI polling every 15 seconds.
+This repository receives GitHub webhook events from the `action-repo`, stores required event data into MongoDB, and displays the activity in a clean UI that polls every 15 seconds.
 
 ---
 
 ## Supported Events
 
-- PUSH
-- PULL_REQUEST
-- MERGE
+The webhook receiver handles the following GitHub events:
+
+- Push
+- Pull Request (Opened)
+- Pull Request (Merged → stored as `MERGE` action)
+
+---
+
+## Recommended Folder Structure
+
+
+webhook-repo/  
+│  
+├── app/  
+│ ├── init.py  
+│ ├── routes.py  
+│ ├── models.py  
+│ └── extensions.py  
+│   
+├── .env  
+├── requirements.txt  
+├── run.py  
+└── README.md  
+
+
+This structure keeps the application modular and clean.
 
 ---
 
 ## MongoDB Schema
 
+Each event is stored in MongoDB with the following structure:
+
+```json
 {
-  request_id: string,
-  author: string,
-  action: "PUSH" | "PULL_REQUEST" | "MERGE",
-  from_branch: string,
-  to_branch: string,
-  timestamp: string (UTC formatted)
+  "request_id": "string",
+  "author": "string",
+  "action": "PUSH | PULL_REQUEST | MERGE",
+  "from_branch": "string",
+  "to_branch": "string",
+  "timestamp": "UTC formatted string"
 }
+```
 
----
+# Setup Instructions
+1. Clone the Repository  
+```bash
+git clone https://github.com/rahil1801/webhook-repo.git
 
-## Setup Instructions
+cd webhook-repo
+```
 
-1. Clone the repo
-2. Create virtual environment
+2. Create Virtual Environment
+```bash
+python -m venv venv
 
-   python -m venv venv
-   source venv/bin/activate  (or venv\Scripts\activate on Windows)
+Activate it:
 
-3. Install dependencies
+Windows:
 
-   pip install -r requirements.txt
+venv\Scripts\activate
 
-4. Create .env file
+Mac/Linux:
 
-   MONGO_URI=mongodb://localhost:27017/github_webhooks
-   SECRET_KEY=your_secret
+source venv/bin/activate
+```
 
-5. Run the server
+3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
 
-   python run.py
+4. Create .env File
 
----
+Create a .env file in the root directory:
+```bash
+MONGO_URI=mongodb://localhost:27017/github_webhooks
+SECRET_KEY=your_secret_key
+```
+5. Run the Server
+```bash
+python run.py
 
-## Using ngrok
+The server will start at:
 
-1. Install ngrok
-2. Start Flask app on port 5000
-3. Run:
+http://localhost:5000
+```
 
-   ngrok http 5000
+Using ngrok
+1. Install ngrok from microsoft Store
 
-4. Copy the HTTPS URL
-5. Go to action-repo → Settings → Webhooks
-6. Add new webhook:
+Or you can also Download and install it from https://ngrok.com/
 
-   Payload URL:
-   https://your-ngrok-url/webhook/receiver
+2. Start Flask App
 
-   Content Type:
-   application/json
+Make sure your app is running on port 5000.
 
-   Events:
-   - Push
-   - Pull Requests
+3. Expose Local Server
+```bash
+ngrok http 5000
+```
+You will receive a public HTTPS URL.
 
----
+4. Configure Webhook in action-repo
 
-## UI
+Go to:
+
+action-repo → Settings → Webhooks → Add Webhook
+
+Set:
+```bash
+Payload URL: https://your-ngrok-url/webhook/receiver
+
+Content Type: application/json
+
+Check these two Events:
+Push
+Pull Requests
+```
+Save the webhook.
+
+# UI Dashboard
 
 Visit:
 
-http://localhost:5000/webhook/ui
+http://localhost:5000/webhook/ui or https://your-ngrok-url/webhook/ui
 
-The UI polls MongoDB every 15 seconds and displays latest activity.
+# Features:
 
----
+• Displays latest GitHub activity
 
-## Application Flow
+• Polls MongoDB every 15 seconds
 
-Action Repo → GitHub Webhook → Flask Endpoint → MongoDB → UI (Polling every 15 sec)
+• Shows latest entries first
 
----
+• Clean formatted event messages
 
-## Brownie Point Implemented
+# Example
 
 If a Pull Request is merged, it is stored as:
 
-MERGE action
+action: "MERGE"
 
-Format:
+Formatted Display:
+```bash
 {author} merged branch {from_branch} to {to_branch} on {timestamp}
+```
+This differentiates normal PR creation from actual merges.
 
----
+# Repositories for Submission
+```bash
+action-repo: https://github.com/rahil1801/action-repo
 
-## Repositories for Submission
-
-- action-repo: (Add Link)
-- webhook-repo: (Add Link)
+webhook-repo: https://github.com/rahil1801/webhook-repo
+```
